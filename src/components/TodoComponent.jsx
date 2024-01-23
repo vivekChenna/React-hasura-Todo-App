@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useMutation, useQuery, gql } from "@apollo/client";
 import Header from "./Header";
 import toast from "react-hot-toast";
+import Modal from "./Modal";
 
 const GET_TODOS = gql`
   query {
@@ -31,6 +32,18 @@ const DELETE_TODO = gql`
   }
 `;
 
+const UPDATE_TODO = gql`
+  mutation updateTodo($id: Int!, $title: String!, $content: String!) {
+    update_Todo_by_pk(
+      pk_columns: { id: $id }
+      _set: { content: $content, title: $title }
+    ) {
+      content
+      id
+    }
+  }
+`;
+
 const TodoComponent = () => {
   const [todoData, setTodoData] = useState({
     titleVal: "",
@@ -42,6 +55,8 @@ const TodoComponent = () => {
   const [addTodo] = useMutation(ADD_TODOS);
 
   const [deleteTodo] = useMutation(DELETE_TODO);
+
+  const [updateTodo] = useMutation(UPDATE_TODO);
 
   if (loading)
     return (
@@ -83,6 +98,23 @@ const TodoComponent = () => {
     toast.error("deleted Todo");
   };
 
+  const UpdateTodoHandler = async (id, newTitle, newContent) => {
+    if (!newTitle || !newContent) {
+      return;
+    }
+
+    await updateTodo({
+      variables: {
+        id: id,
+        title: newTitle,
+        content: newContent,
+      },
+      refetchQueries: [{ query: GET_TODOS }],
+    });
+
+    toast.success("updated todo successfully");
+  };
+
   return (
     <div className=" flex flex-col">
       <Header />
@@ -104,6 +136,7 @@ const TodoComponent = () => {
             onChange={HandleChange}
             required
             className=" border border-gray-300 rounded-md p-1 mb-4 outline-none"
+            placeholder="title..."
           />
           <label htmlFor="contentVal" className=" font-semibold text-xl">
             Content:
@@ -116,6 +149,7 @@ const TodoComponent = () => {
             value={todoData.contentVal}
             onChange={HandleChange}
             className="border border-gray-300 rounded-md p-1 mb-4 outline-none"
+            placeholder="content..."
           />
 
           <button
@@ -146,12 +180,21 @@ const TodoComponent = () => {
                 </p>
               </div>
 
-              <button
-                className=" rounded-md bg-red-500 text-white px-2 py-1 w-max"
-                onClick={() => deleteHandler(val.id)}
-              >
-                delete
-              </button>
+              <div className=" flex justify-between">
+                <button
+                  className=" rounded-md bg-red-500 text-white px-2 py-1 w-max"
+                  onClick={() => deleteHandler(val.id)}
+                >
+                  delete
+                </button>
+
+                <Modal
+                  onUpdate={(id, newTitle, newContent) =>
+                    UpdateTodoHandler(id, newTitle, newContent)
+                  }
+                  id={val.id}
+                />
+              </div>
             </div>
           );
         })}
