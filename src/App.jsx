@@ -1,13 +1,13 @@
 import React from "react";
 import "./App.css";
-import Todo from "./components/Todo";
+import TodoComponent from "./components/TodoComponent";
 
 // https://large-phoenix-56.hasura.app/v1/graphql
 
 function App() {
   return (
-    <div className=" border-2 border-black">
-      <Todo />
+    <div>
+      <TodoComponent />
     </div>
   );
 }
